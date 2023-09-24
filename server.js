@@ -56,7 +56,7 @@ if (process.env.NODE_ENV === "development") {
 
 // Mount routers
 app.use("/api/v1/boards", boards);
-app.use("/api/v1/user/boards", userBoards);
+app.use("/api/v1/boards/user", userBoards);
 app.use('/api/v1/auth', auth);
 
 

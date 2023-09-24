@@ -5,9 +5,9 @@ const ErrorResponse = require("../utils/errorResponse");
 // @desc      Get all user boards
 // @route     GET /api/v1/user/boards
 // @access    User
-exports.getUserBoards = asyncHandler(async (req, res, next) => {
-  const boards = await UserBoard.find({ user: req.params.userId });
-
+exports.getUserBoardNames = asyncHandler(async (req, res, next) => {
+  const boards = await UserBoard.find({ user: req.params.userId }, 'slug');
+  if (!boards.length) return next(new ErrorResponse('No boards were found please create a board', 404))
   return res.status(200).json({
     success: true,
     count: boards.length,
@@ -19,8 +19,8 @@ exports.getUserBoards = asyncHandler(async (req, res, next) => {
 // @route     GET /api/v1/user/boards/:boardId
 // @access    User
 exports.getUserBoard = asyncHandler(async (req, res, next) => {
-  const boards = await UserBoard.findById(req.params.boardId);
-
+  const boards = await UserBoard.findOne({ slug: req.params.slug });
+  if (!boards) return next(new ErrorResponse('No boards were found please create a board', 404))
   return res.status(200).json({
     success: true,
     data: boards
@@ -31,8 +31,6 @@ exports.getUserBoard = asyncHandler(async (req, res, next) => {
 // @route     POST /api/v1/user/boards
 // @access    User
 exports.createUserBoard = asyncHandler(async (req, res, next) => {
-  const userId = req.user.id
-  req.body.user = userId
   const board = await UserBoard.create(req.body);
   res.status(201).json({ success: true, data: board });
 });
@@ -41,7 +39,7 @@ exports.createUserBoard = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/user/boards
 // @access    User
 exports.updateUserBoard = asyncHandler(async (req, res, next) => {
-  const userId = req.user.id
+  const userId = req.body.userId
   let board = await UserBoard.findOne({ user: userId });
   if (!board) {
     return next(new ErrorResponse(`Board not found with id of ${req.params.id}`, 404));
@@ -57,7 +55,7 @@ exports.updateUserBoard = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/user/boards
 // @access    User
 exports.deleteUserBoard = asyncHandler(async (req, res, next) => {
-  const userId = req.user.id
+  const userId = req.body.userId
   let board = await UserBoard.findOne({ user: userId });
   if (!board) {
     return next(new ErrorResponse(`Board not found with id of ${req.params.id}`, 404));

@@ -1,7 +1,7 @@
 const express = require("express");
 const Board = require("../models/Board");
 
-const { getBoards, getBoard } = require("../controllers/boards");
+const { getBoards, getBoard, getBoardNames } = require("../controllers/boards");
 const advancedResults = require("../middleware/advancedResults");
 
 
@@ -12,7 +12,11 @@ router
   .get(advancedResults(Board), getBoards)
 
 router
-  .route("/:boardId")
+  .route("/names")
+  .get(getBoardNames)
+
+router
+  .route("/:slug")
   .get(getBoard);
 
 module.exports = router;

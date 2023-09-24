@@ -10,14 +10,22 @@ exports.getBoards = asyncHandler(async (req, res, next) => {
   res.status(200).json(res.advancedResults);
 });
 
-// @desc      get single board
-// @route     GET /api/v1/boards/:boardId
+// @desc      get all board names
+// @route     GET /api/v1/boards/names
+// @access    Public
+exports.getBoardNames = asyncHandler(async (req, res, next) => {
+  const boardNames = await Board.find({}, 'slug')
+  if (!boardNames.length) return next(new ErrorResponse('No board was found please create a board', 404))
+  res.status(200).json({ success: true, data: boardNames });
+})
+
+// @desc      get single board by name
+// @route     GET /api/v1/boards/:name
 // @access    Public
 exports.getBoard = asyncHandler(async (req, res, next) => {
-  const board = await Board.findById(req.params.boardId);
-  if (!board) {
-    return next(new ErrorResponse(`Board not found with id of ${req.params.id}`, 404));
-  }
+  const board = await Board.findOne({ slug: req.params.slug })
+  if (!board)
+    return next(new ErrorResponse(`Board not found with name ${req.params.name}`, 404));
   res.status(200).json({ success: true, data: board });
 })
 

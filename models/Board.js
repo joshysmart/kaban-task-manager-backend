@@ -8,13 +8,25 @@ const BoardSchema = new mongoose.Schema(
       trim: true,
       maxlength: [50, 'Name can not be more than 50 characters']
     },
+    slug: {
+      type: String,
+      unique: true,
+      required: true,
+      trim: true
+    },
     columns: [
       {
         name: {
-          type: String
+          type: String,
+          unique: true,
         },
         tasks: [{
-          title: String,
+          title: {
+            type: String,
+            required: [true, 'Please add a title'],
+            trim: true,
+            unique: true
+          },
           description: String,
           status: String,
           subtasks: [{
@@ -23,11 +35,8 @@ const BoardSchema = new mongoose.Schema(
           }]
         }]
       }
-    ],
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    }
+    ]
   })
 
+module.exports = BoardSchema;
 module.exports = mongoose.model('Board', BoardSchema);

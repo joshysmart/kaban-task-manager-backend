@@ -1,20 +1,23 @@
 const express = require("express");
 
-const { getUserBoards, getUserBoard, createUserBoard, updateUserBoard, deleteUserBoard } = require("../controllers/userBoards");
+const { getUserBoardNames, getUserBoard, createUserBoard, updateUserBoard, deleteUserBoard } = require("../controllers/userBoards");
 
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.use(protect);
+// router.use(protect);
 
 router
-  .route("/:userId")
+  .route("/:slug")
   .get(getUserBoard)
 
 router
+  .route("/names/:userId")
+  .get(getUserBoardNames)
+
+router
   .route("/")
-  .get(getUserBoards)
   .post(createUserBoard)
   .put(updateUserBoard)
   .delete(deleteUserBoard);
