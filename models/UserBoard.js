@@ -1,18 +1,18 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const UserBoardSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Please add a name'],
+    required: [true, "Please add a name"],
     unique: true,
     trim: true,
-    maxlength: [50, 'Name can not be more than 50 characters']
+    maxlength: [50, "Name can not be more than 50 characters"],
   },
   slug: {
     type: String,
     unique: true,
     required: true,
-    trim: true
+    trim: true,
   },
   columns: [
     {
@@ -20,27 +20,27 @@ const UserBoardSchema = new mongoose.Schema({
         type: String,
         unique: true,
       },
-      tasks: [{
-        title: {
-          type: String,
-          required: [true, 'Please add a title'],
-          trim: true,
-          unique: true
+      tasks: [
+        {
+          title: {
+            type: String,
+            required: [true, "Please add a title"],
+            trim: true,
+            unique: true,
+          },
+          description: String,
+          status: String,
+          subtasks: [
+            {
+              title: String,
+              isCompleted: Boolean,
+            },
+          ],
         },
-        description: String,
-        status: String,
-        subtasks: [{
-          title: String,
-          isCompleted: Boolean
-        }]
-      }]
-    }
+      ],
+    },
   ],
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true
-  }
+  user: String,
 });
 
-module.exports = mongoose.model('UserBoard', UserBoardSchema);
+module.exports = mongoose.model("UserBoard", UserBoardSchema);
