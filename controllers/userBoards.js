@@ -46,16 +46,34 @@ exports.createUserBoard = asyncHandler(async (req, res, next) => {
 // @access    User
 exports.updateUserBoard = asyncHandler(async (req, res, next) => {
   const userId = req.body.userId;
-  let board = await UserBoard.findOne({ user: userId });
+  const { name, columns } = req.body;
+  let board = await UserBoard.findById(req.body.id);
+  const columnNames = board.columns.map((column) => column.name);
   if (!board) {
+    return next(ErrorResponse(`Board not found with`, 404));
+  }
+  if (board.user !== userId) {
+    return next(ErrorResponse(`Not authorized`, 401));
+  }
+  if (columns.length < board.columns.length) {
     return next(
-      new ErrorResponse(`Board not found with id of ${req.params.id}`, 404)
+      ErrorResponse(`Columns cannot be less than ${board.columns.length}`, 400)
     );
   }
-  // board = await UserBoard.findOneAndUpdate({ user: userId }, req.body, {
-  //   new: true,
-  //   runValidators: true,
-  // });
+  if (name) board.name = name;
+  columns.forEach((column, i) => {
+    if (board.columns[i]) {
+      board.columns[i].name = column.name;
+      return;
+    }
+    if (columnNames.includes(column.name)) {
+      return next(
+        ErrorResponse(`Column name ${column.name} already exists`, 400)
+      );
+    }
+    board.columns.push(column);
+  });
+  await board.save();
   res.status(200).json({ success: true, data: board });
 });
 
@@ -64,11 +82,14 @@ exports.updateUserBoard = asyncHandler(async (req, res, next) => {
 // @access    User
 exports.addNewTask = asyncHandler(async (req, res, next) => {
   const userId = req.body.userId;
-  const board = await UserBoard.findOne({ user: userId });
+  const board = await UserBoard.findById(req.body.id);
   if (!board) {
     return next(
       ErrorResponse(`Board not found with id of ${req.body.id}`, 404)
     );
+  }
+  if (board.user !== userId) {
+    return next(ErrorResponse(`Not authorized`, 401));
   }
   const column = board.columns.find(
     (column) => column.name === req.body.status
@@ -117,4 +138,3 @@ exports.deleteUserBoard = asyncHandler(async (req, res, next) => {
   await board.remove();
   res.status(200).json({ success: true, data: {} });
 });
-

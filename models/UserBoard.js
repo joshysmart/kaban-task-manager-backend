@@ -18,7 +18,6 @@ const UserBoardSchema = new mongoose.Schema({
     {
       name: {
         type: String,
-        unique: true,
       },
       tasks: [
         {
@@ -26,7 +25,6 @@ const UserBoardSchema = new mongoose.Schema({
             type: String,
             required: [true, "Please add a title"],
             trim: true,
-            unique: true,
           },
           description: String,
           status: String,
