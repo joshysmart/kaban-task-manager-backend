@@ -6,7 +6,8 @@ const ErrorResponse = require("../utils/errorResponse");
 // @route     GET /api/v1/user/boards
 // @access    User
 exports.getUserBoardNames = asyncHandler(async (req, res, next) => {
-  const boards = await UserBoard.find({ user: req.params.userId }, "slug");
+  const userId = req.params.userId;
+  const boards = await UserBoard.find({ user: userId }, "slug");
   if (!boards.length)
     return next(
       new ErrorResponse("No boards were found please create a board", 404)
@@ -45,15 +46,11 @@ exports.createUserBoard = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/user/boards
 // @access    User
 exports.updateUserBoard = asyncHandler(async (req, res, next) => {
-  const userId = req.body.userId;
   const { name, columns } = req.body;
   let board = await UserBoard.findById(req.body.id);
   const columnNames = board.columns.map((column) => column.name);
   if (!board) {
-    return next(ErrorResponse(`Board not found with`, 404));
-  }
-  if (board.user !== userId) {
-    return next(ErrorResponse(`Not authorized`, 401));
+    return next(new ErrorResponse(`Board not found`, 404));
   }
   if (columns.length < board.columns.length) {
     return next(
@@ -68,7 +65,7 @@ exports.updateUserBoard = asyncHandler(async (req, res, next) => {
     }
     if (columnNames.includes(column.name)) {
       return next(
-        ErrorResponse(`Column name ${column.name} already exists`, 400)
+        new ErrorResponse(`Column name ${column.name} already exists`, 400)
       );
     }
     board.columns.push(column);
@@ -81,15 +78,11 @@ exports.updateUserBoard = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/user/boards
 // @access    User
 exports.addNewTask = asyncHandler(async (req, res, next) => {
-  const userId = req.body.userId;
   const board = await UserBoard.findById(req.body.id);
   if (!board) {
     return next(
-      ErrorResponse(`Board not found with id of ${req.body.id}`, 404)
+      new ErrorResponse(`Board not found with id of ${req.body.id}`, 404)
     );
-  }
-  if (board.user !== userId) {
-    return next(ErrorResponse(`Not authorized`, 401));
   }
   const column = board.columns.find(
     (column) => column.name === req.body.status
@@ -102,7 +95,10 @@ exports.addNewTask = asyncHandler(async (req, res, next) => {
   const task = column.tasks.find((task) => task.title === req.body.title);
   if (task) {
     return next(
-      ErrorResponse(`Task already exists with title of ${req.body.title}`, 400)
+      new ErrorResponse(
+        `Task already exists with title of ${req.body.title}`,
+        400
+      )
     );
   }
   column.tasks.push(req.body);
@@ -114,12 +110,58 @@ exports.addNewTask = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/user/boards
 // @access    User
 exports.updateTask = asyncHandler(async (req, res, next) => {
-  res.status(200).json({ success: true, data: {} });
+  const board = await UserBoard.findOne({
+    "columns.tasks._id": req.body.taskId,
+  });
+  if (!board) {
+    return next(
+      new ErrorResponse(`Board not found with id of ${req.body.id}`, 404)
+    );
+  }
+  const column = board.columns.find(
+    (column) => column.name === req.body.status
+  );
+  if (!column) {
+    return next(
+      new ErrorResponse(`Column not found with name of ${req.body.status}`, 404)
+    );
+  }
+  // ginf the index of the task in the column
+  const taskIndex = column.tasks.findIndex(
+    (task) => task._id.toString() === req.body.taskId
+  );
+  // if the task is not found
+  if (taskIndex === -1) {
+    //delete the task from the old column
+    // find the old column
+    const oldColumn = board.columns.find(
+      (column) => column.name === req.body.oldStatus
+    );
+    // find the index of the task in the old column
+    const oldTaskIndex = oldColumn.tasks.findIndex(
+      (task) => task._id.toString() === req.body.taskId
+    );
+
+    if (oldTaskIndex === -1) {
+      return next(new ErrorResponse(`Task not found`, 404));
+    }
+
+    // delete the task from the old column
+    oldColumn.tasks.splice(oldTaskIndex, 1);
+    // add the task to the new column
+    column.tasks.push(req.body);
+  } else {
+    // replace the task with the new task
+    column.tasks[taskIndex] = req.body;
+  }
+  await board.save();
+  res.status(200).json({ success: true, data: board });
 });
 
 // @desc      delete task in user board
 // @route     PUT /api/v1/user/boards
 // @access    User
+
 exports.deleteTask = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: {} });
 });

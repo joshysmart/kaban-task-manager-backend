@@ -12,21 +12,26 @@ const {
 } = require("../controllers/userBoards");
 
 const { protect } = require("../middleware/auth");
+const { ClerkExpressWithAuth } = require("@clerk/clerk-sdk-node");
 
 const router = express.Router();
-
-// router.use(protect);
 
 router.route("/:slug").get(getUserBoard);
 
 router.route("/names/:userId").get(getUserBoardNames);
 
 router
+  .use(ClerkExpressWithAuth(), protect)
   .route("/")
   .post(createUserBoard)
   .put(updateUserBoard)
   .delete(deleteUserBoard);
 
-router.route("/task").post(addNewTask).put(updateTask).delete(deleteTask);
+router
+  .use(ClerkExpressWithAuth(), protect)
+  .route("/task")
+  .post(addNewTask)
+  .put(updateTask)
+  .delete(deleteTask);
 
 module.exports = router;
