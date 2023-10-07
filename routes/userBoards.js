@@ -12,7 +12,7 @@ const {
 } = require("../controllers/userBoards");
 
 const { protect } = require("../middleware/auth");
-const { ClerkExpressWithAuth } = require("@clerk/clerk-sdk-node");
+//const { ClerkExpressWithAuth } = require("@clerk/clerk-sdk-node");
 
 const router = express.Router();
 
