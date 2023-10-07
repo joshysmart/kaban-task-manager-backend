@@ -46,8 +46,8 @@ exports.createUserBoard = asyncHandler(async (req, res, next) => {
 // @route     PUT /api/v1/boards/user
 // @access    User
 exports.updateUserBoard = asyncHandler(async (req, res, next) => {
-  const { name, columns } = req.body;
-  let board = await UserBoard.findById(req.body.id);
+  const { name, columns, id } = req.body;
+  let board = await UserBoard.findById(id);
   const columnNames = board.columns.map((column) => column.name);
   if (!board) {
     return next(new ErrorResponse(`Board not found`, 404));
@@ -78,12 +78,10 @@ exports.updateUserBoard = asyncHandler(async (req, res, next) => {
 // @route     DELETE /api/v1/user/boards
 // @access    User
 exports.deleteUserBoard = asyncHandler(async (req, res, next) => {
-  const userId = req.body.userId;
-  let board = await UserBoard.findOne({ user: userId });
+  const { id } = req.body;
+  let board = await UserBoard.findById(id);
   if (!board) {
-    return next(
-      new ErrorResponse(`Board not found with id of ${req.params.id}`, 404)
-    );
+    return next(new ErrorResponse(`Board not found with id of ${id}`, 404));
   }
   await board.remove();
   res.status(200).json({ success: true, data: {} });
