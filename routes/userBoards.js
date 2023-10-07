@@ -21,14 +21,14 @@ router.route("/:slug").get(getUserBoard);
 router.route("/names/:userId").get(getUserBoardNames);
 
 router
-  .use(ClerkExpressWithAuth(), protect)
+  // .use(ClerkExpressWithAuth(), protect)
   .route("/")
   .post(createUserBoard)
   .put(updateUserBoard)
   .delete(deleteUserBoard);
 
 router
-  .use(ClerkExpressWithAuth(), protect)
+  //  .use(ClerkExpressWithAuth(), protect)
   .route("/task")
   .post(addNewTask)
   .put(updateTask)
