@@ -3,7 +3,7 @@ const asyncHandler = require("../middleware/async");
 const ErrorResponse = require("../utils/errorResponse");
 
 // @desc      Get all user boards
-// @route     GET /api/v1/user/boards
+// @route     GET /api/v1/boards/user
 // @access    User
 exports.getUserBoardNames = asyncHandler(async (req, res, next) => {
   const userId = req.params.userId;
@@ -20,7 +20,7 @@ exports.getUserBoardNames = asyncHandler(async (req, res, next) => {
 });
 
 // @desc      Get one user board
-// @route     GET /api/v1/user/boards/:boardId
+// @route     GET /api/v1/boards/user/:boardId
 // @access    User
 exports.getUserBoard = asyncHandler(async (req, res, next) => {
   const boards = await UserBoard.findOne({ slug: req.params.slug });
@@ -35,7 +35,7 @@ exports.getUserBoard = asyncHandler(async (req, res, next) => {
 });
 
 // @desc      create user board
-// @route     POST /api/v1/user/boards
+// @route     POST /api/v1/boards/user
 // @access    User
 exports.createUserBoard = asyncHandler(async (req, res, next) => {
   const board = await UserBoard.create(req.body);
@@ -43,7 +43,7 @@ exports.createUserBoard = asyncHandler(async (req, res, next) => {
 });
 
 // @desc      update user board
-// @route     PUT /api/v1/user/boards
+// @route     PUT /api/v1/boards/user
 // @access    User
 exports.updateUserBoard = asyncHandler(async (req, res, next) => {
   const { name, columns } = req.body;
@@ -74,8 +74,23 @@ exports.updateUserBoard = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: board });
 });
 
+// @desc      delete user board
+// @route     DELETE /api/v1/user/boards
+// @access    User
+exports.deleteUserBoard = asyncHandler(async (req, res, next) => {
+  const userId = req.body.userId;
+  let board = await UserBoard.findOne({ user: userId });
+  if (!board) {
+    return next(
+      new ErrorResponse(`Board not found with id of ${req.params.id}`, 404)
+    );
+  }
+  await board.remove();
+  res.status(200).json({ success: true, data: {} });
+});
+
 // @desc      add new task to user board
-// @route     PUT /api/v1/user/boards
+// @route     PUT /api/v1/boards/user
 // @access    User
 exports.addNewTask = asyncHandler(async (req, res, next) => {
   const board = await UserBoard.findById(req.body.id);
@@ -107,7 +122,7 @@ exports.addNewTask = asyncHandler(async (req, res, next) => {
 });
 
 // @desc      update task in user board
-// @route     PUT /api/v1/user/boards
+// @route     PUT /api/v1/boards/user/task
 // @access    User
 exports.updateTask = asyncHandler(async (req, res, next) => {
   const board = await UserBoard.findOne({
@@ -126,7 +141,7 @@ exports.updateTask = asyncHandler(async (req, res, next) => {
       new ErrorResponse(`Column not found with name of ${req.body.status}`, 404)
     );
   }
-  // ginf the index of the task in the column
+  // find the index of the task in the column
   const taskIndex = column.tasks.findIndex(
     (task) => task._id.toString() === req.body.taskId
   );
@@ -161,22 +176,35 @@ exports.updateTask = asyncHandler(async (req, res, next) => {
 // @desc      delete task in user board
 // @route     PUT /api/v1/user/boards
 // @access    User
-
 exports.deleteTask = asyncHandler(async (req, res, next) => {
-  res.status(200).json({ success: true, data: {} });
-});
-
-// @desc      delete user board
-// @route     DELETE /api/v1/user/boards
-// @access    User
-exports.deleteUserBoard = asyncHandler(async (req, res, next) => {
-  const userId = req.body.userId;
-  let board = await UserBoard.findOne({ user: userId });
+  const board = await UserBoard.findOne({
+    "columns.tasks._id": req.body.taskId,
+  });
   if (!board) {
     return next(
-      new ErrorResponse(`Board not found with id of ${req.params.id}`, 404)
+      new ErrorResponse(`Board not found with id of ${req.body.id}`, 404)
     );
   }
-  await board.remove();
+
+  const column = board.columns.find(
+    (column) => column.name === req.body.status
+  );
+  if (!column) {
+    return next(
+      new ErrorResponse(`Column not found with name of ${req.body.status}`, 404)
+    );
+  }
+  // find the index of the task in the column
+  const taskIndex = column.tasks.findIndex(
+    (task) => task._id.toString() === req.body.taskId
+  );
+  // if the task is not found
+  if (taskIndex === -1) {
+    return next(new ErrorResponse(`Task not found`, 404));
+  }
+  // delete the task from the column
+  column.tasks.splice(taskIndex, 1);
+  await board.save();
+
   res.status(200).json({ success: true, data: {} });
 });

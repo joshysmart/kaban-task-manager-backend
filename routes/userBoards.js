@@ -7,8 +7,8 @@ const {
   updateUserBoard,
   deleteUserBoard,
   addNewTask,
-  updateTask,
   deleteTask,
+  updateTask,
 } = require("../controllers/userBoards");
 
 const { protect } = require("../middleware/auth");
