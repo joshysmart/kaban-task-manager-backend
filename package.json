@@ -188,5 +188,8 @@
     "dev": "nodemon server"
   },
   "author": "joshysmart",
-  "license": "ISC"
+  "license": "ISC",
+"engines": {
+  "node": ">=18.18.0 <20.0.0"
+}
 }
